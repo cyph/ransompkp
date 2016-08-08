@@ -66,6 +66,11 @@ function getconfigfiles {
 }
 
 function updatecert {
+	service nginx stop
+	sleep 1
+	killall nginx
+	sleep 1
+
 	/etc/nginx/.certbot certonly \
 		-n \
 		--agree-tos \
@@ -130,7 +135,12 @@ function updatecert {
 		rm "\${f}.new"
 	done
 
-	service nginx restart
+	while [ "$(ps aux | grep nginx | grep -v conf.sh | grep -v grep | wc -l)" == "0" ] ; do
+		su -c 'service nginx start'
+		sleep 1
+		su -c 'service nginx restart'
+		sleep 1
+	done
 
 	sleep 30
 	for f in \$(getconfigfiles) ; do
